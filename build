@@ -1,0 +1,48 @@
+#!/usr/bin/env zsh
+
+TARGET_OS=linux			# linux, darwin, windows
+TARGET_ARCH=amd64		# arm (RPi), amd64 (Intel), arm64 (Apple Silicon)
+ARM_VERSION=			# mostly used for RPis. Typically 7
+TARGET_BIN=				# name to give binary, default is directory
+
+# By default, executable name is the same as current directory name,
+# assuming it hasn't been specified
+if [ -z "$TARGET_BIN" ]; then
+	TARGET_BIN=${PWD##*/}
+fi
+
+# Process command line options
+while [ -n "$1" ]; do
+	case "$1" in
+		-a)
+			shift
+			TARGET_ARCH=$1;;
+		-b)
+			shift
+			TARGET_BIN=$1;;
+		-o)
+			shift
+			TARGET_OS=$1;;
+		*)	# this will deal with anything not in the list of case items above
+			echo "$1 is not an option"
+			echo "Usage: build [-a <arch>] [-b <binaryfile>] [-o <os>]"
+			exit 1;;
+	esac
+	shift		# move next param into $1
+done
+
+if [ $TARGET_ARCH = "arm" ] | [ $TARGET_ARCH = "arm64" ]; then
+	ARMV="GOARM=$ARM_VERSION"
+else
+	ARMV=""
+fi
+
+go clean
+
+buildstr="env GOOS=$TARGET_OS OARCH=$TARGET_ARCH $ARMV go build -o $TARGET_BIN"
+
+echo $buildstr
+
+env GOOS=$TARGET_OS OARCH=$TARGET_ARCH $ARMV go build -o $TARGET_BIN
+
+exit 0
