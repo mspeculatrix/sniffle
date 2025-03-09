@@ -6,9 +6,9 @@ It just logs the SRC and DST IPs and packet types. It doesn't attempt to look at
 
 Command line options are:
 
-- -a <ip>   IP address of device to sniff
-- -d <dev>  Name of a predefined device to sniff
-- -f <name> Name of a predefined filter to use
+- -a \<ip>   IP address of device to sniff
+- -d \<dev>  Name of a predefined device to sniff
+- -f \<name> Name of a predefined filter to use
 
 They are treated in that priority - ie, if -a is used, then -d and -f are ignored. If -d is used, -f is ignored.
 
