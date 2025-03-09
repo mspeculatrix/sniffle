@@ -40,14 +40,14 @@ var (
 
 func main() {
 	/*  READ CONFIG FILES  */
-	devices, _ = filelib.ReadKVFile("devices.cfg", ":")
-	filters, _ = filelib.ReadKVFile("filters.cfg", ":")
+	devices, _ = filelib.ReadKVFile("config/devices.cfg", ":")
+	filters, _ = filelib.ReadKVFile("config/filters.cfg", ":")
 
 	/*  GET COMMAND LINE FLAGS  */
 	flag.StringVar(&devIP, "a", "", "IP of device to sniff")
 	flag.StringVar(&devName, "d", "", "Name of device to sniff")
-	flag.BoolVar(&verbose, "v", false, "Use verbose mode")
 	flag.StringVar(&filterName, "f", "", "Predefined filter")
+	flag.BoolVar(&verbose, "v", false, "Use verbose mode")
 	flag.Parse()
 
 	/*  SET FILTER  */
