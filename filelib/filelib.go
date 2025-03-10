@@ -6,8 +6,11 @@ import (
 	"strings"
 )
 
-func ReadKVFile(filename string, sep string) (map[string]string, error) {
-	file, err := os.Open(filename)
+// Read a text file that contains simple key/value pairs (one per line)
+// separated by the string specific in the sep param.
+// Returns a map of type map[string]string.
+func ReadKVFile(filepath string, sep string) (map[string]string, error) {
+	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 #!/usr/bin/env zsh
 
 TARGET_OS=linux         # linux, darwin, windows
-TARGET_ARCH=amd64       # arm (RPi), amd64 (Intel), arm64 (Apple Silicon)
+TARGET_ARCH=amd64       # arm (RPi), amd64 (Intel), arm64 (Apple M-series)
 ARM_VERSION=""          # mostly used for RPis. Typically 7
 TARGET_BIN=             # name to give binary, default is directory
 
@@ -34,7 +34,7 @@ while [ -n "$1" ]; do
     shift		# move next param into $1
 done
 
-if [ $TARGET_ARCH = "arm" ] | [ $TARGET_ARCH = "arm64" ]; then
+if [ $TARGET_ARCH = "arm" ]; then
     ARMV="GOARM=$ARM_VERSION"
 else
     ARMV=""
