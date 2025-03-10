@@ -9,8 +9,10 @@ Command line options are:
 - -a \<ip>   IP address of device to sniff
 - -d \<dev>  Name of a predefined device to sniff
 - -f \<name> Name of a predefined BPF-format filter to use
+- -t \<secs> Timeout in secs - default 30
+- -v         Turn on verbose mode (otherwise there's no STDOUT output)
 
-They are treated in that priority - ie, if -a is used, then -d and -f are ignored. If -d is used, -f is ignored.
+The first three are treated in that priority - ie, if -a is used, then -d and -f are ignored. If -d is used, -f is ignored.
 
 After cloning or downloading this code, `cd` into the sniffle directory and run the `setup.sh` script once.
 

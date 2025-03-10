@@ -19,10 +19,9 @@ import (
 )
 
 const (
-	iface    = "enp3s0"
-	snaplen  = int32(1024)
-	promisc  = true
-	timeoutT = 30
+	iface   = "enp3s0"
+	snaplen = int32(1024)
+	promisc = true
 )
 
 var (
@@ -31,6 +30,7 @@ var (
 	filterName = ""
 	filter     = ""
 	fileID     = "sniffle"
+	timeoutT   = 30
 	verbose    = false
 	defaults   = map[string]string{
 		"captureDir": ".",
@@ -55,6 +55,7 @@ func main() {
 	flag.StringVar(&devIP, "a", devIP, "IP of device to sniff")
 	flag.StringVar(&devName, "d", devName, "Name of predefined device to sniff")
 	flag.StringVar(&filterName, "f", filter, "Predefined filter")
+	flag.IntVar(&timeoutT, "t", timeoutT, "Timeout in secs")
 	flag.BoolVar(&verbose, "v", false, "Use verbose mode")
 	flag.Parse()
 
@@ -96,9 +97,6 @@ func main() {
 		// things I want. Your mileage may vary, so feel free to amend.
 		filter += " && not broadcast && not arp && not multicast"
 
-		// Not currently using the timeout functionality. This is a TO DO
-		var timeout time.Duration = time.Duration(timeoutT) * time.Second
-
 		// Open file for capture
 		ts := time.Now().Format("20060102_150405")
 		captureFile := fileID + "_" + ts + "." + settings["captureExt"]
@@ -110,6 +108,7 @@ func main() {
 		defer fh.Close() // ensure file gets closed
 
 		// Open interface
+		var timeout time.Duration = time.Duration(timeoutT) * time.Second
 		handle, err := pcap.OpenLive(iface, snaplen, promisc, timeout)
 		if err != nil {
 			log.Fatal(err)
@@ -132,10 +131,21 @@ func main() {
 		// Start stream
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
-		// Pull packets from stream and handle them
-		for packet := range packetSource.Packets() {
-			packethandler.HandlePacket(packet, fh, verbose)
+		// Get timer going for timeout
+		timer := time.NewTicker(timeout)
+		defer timer.Stop()
+
+		for {
+			select {
+			case packet := <-packetSource.Packets():
+				// If we've received a packet, handle it
+				packethandler.HandlePacket(packet, fh, verbose)
+			case <-timer.C:
+				// If the time has finished, our work is done
+				return
+			}
 		}
+
 	} else {
 		log.Fatal("No valid filter")
 	}
