@@ -12,11 +12,11 @@ import (
 )
 
 // The callback function for handling packets as they come in.
-func HandlePacket(packet gopacket.Packet, fileh *os.File, verbose bool) {
+func HandlePacket(packet gopacket.Packet, logFileH *os.File, verbose bool) {
 	var ip4SrcIP = ""
 	var ip4DstIP = ""
 	var ip4Proto = ""
-	var ptype = ""
+	var ptype = "---"
 	var srcPort uint16 = 0
 	var dstPort uint16 = 0
 	var note = ""
@@ -82,11 +82,13 @@ func HandlePacket(packet gopacket.Packet, fileh *os.File, verbose bool) {
 
 	if logpkt {
 		ts := time.Now().Format("20060102_150405") // timestamp string
-		logline := fmt.Sprintf("%-15s %-7s %3s %15s : %-5d %15s : %-5d  %-s\n", ts, ip4Proto, ptype, ip4SrcIP, srcPort, ip4DstIP, dstPort, note)
+		logFmt := "%-15s %-7s %3s %15s : %-5d %15s : %-5d %-s\n"
+		//textFmt := "%s %s %s %s %d %s %d %s\n"
+		logline := fmt.Sprintf(logFmt, ts, ip4Proto, ptype, ip4SrcIP, srcPort, ip4DstIP, dstPort, note)
 		if verbose {
 			fmt.Print(logline)
 		}
-		_, ferr := fileh.WriteString(logline)
+		_, ferr := logFileH.WriteString(logline)
 		if ferr != nil {
 			log.Fatal(ferr)
 		}

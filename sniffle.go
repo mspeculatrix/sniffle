@@ -1,5 +1,8 @@
 /*
-A simple program to sniff packets going to or from a specific device.
+SNIFFLE
+
+A simple program to sniff packets going to or from a specific device on the
+local network.
 */
 
 package main
@@ -19,20 +22,21 @@ import (
 )
 
 const (
-	iface   = "enp3s0"
 	snaplen = int32(1024)
 	promisc = true
 )
 
 var (
-	devIP      = ""
-	devName    = ""
-	filterName = ""
-	filter     = ""
-	fileID     = "sniffle"
-	timeoutT   = 30
-	verbose    = false
+	devIP      = ""        // IPv4 address for a specific device
+	devName    = ""        // for searching in devices map
+	filterName = ""        // for searching in filters map
+	filter     = ""        // BPF filter string
+	filePrefix = "sniffle" // default prefix
+	iface      = "enp3s0"  // should probably make this a var & cmd line option
+	timeoutT   = 30        // timeout in seconds
+	verbose    = false     // naturally silent
 	defaults   = map[string]string{
+		// defaults to be used if no settings.cfg file found
 		"captureDir": ".",
 		"captureExt": "log",
 	}
@@ -41,20 +45,21 @@ var (
 func main() {
 	/*  READ CONFIG FILES  */
 	// Read settings.cfg file
-	settings, settingsErr := filelib.ReadKVFile("config/settings.cfg", ":")
+	settings, settingsErr := filelib.ReadConfig("sniffle.cfg")
 	if settingsErr != nil {
 		// Had a problem reading settings file, so use defaults
 		settings = defaults
 	}
 	// Read the devices.cfg file to create the devices map
-	devices, _ := filelib.ReadKVFile("config/devices.cfg", ":")
+	devices, _ := filelib.ReadConfig("localhosts.cfg")
 	// Read the filters.cfg file to create the filters map
-	filters, _ := filelib.ReadKVFile("config/filters.cfg", ":")
+	filters, _ := filelib.ReadConfig("bpf_filters.cfg")
 
-	/*  GET COMMAND LINE FLAGS  */
+	/*  GET COMMAND LINE PARAMETERS  */
 	flag.StringVar(&devIP, "a", devIP, "IP of device to sniff")
 	flag.StringVar(&devName, "d", devName, "Name of predefined device to sniff")
 	flag.StringVar(&filterName, "f", filter, "Predefined filter")
+	flag.StringVar(&iface, "i", iface, "Interface to use fo sniffing")
 	flag.IntVar(&timeoutT, "t", timeoutT, "Timeout in secs")
 	flag.BoolVar(&verbose, "v", false, "Use verbose mode")
 	flag.Parse()
@@ -65,7 +70,7 @@ func main() {
 	if devIP != "" {
 		filter = "host " + devIP
 		filterOK = true
-		fileID = devIP
+		filePrefix = devIP
 		// If not, was a device name specified with the -d flag
 	} else if devName != "" {
 		// If so, look up the name in the devices map
@@ -74,7 +79,9 @@ func main() {
 			if ok {
 				filter = "host " + val
 				filterOK = true
-				fileID = devName
+				filePrefix = devName
+			} else {
+				log.Fatal("Invalied device name.")
 			}
 		}
 		// Did the user specify a named filter with the -f flag?
@@ -85,7 +92,7 @@ func main() {
 			if ok {
 				filter = val
 				filterOK = true
-				fileID = filterName
+				filePrefix = filterName
 			}
 		}
 	} else {
@@ -99,7 +106,7 @@ func main() {
 
 		// Open file for capture
 		ts := time.Now().Format("20060102_150405")
-		captureFile := fileID + "_" + ts + "." + settings["captureExt"]
+		captureFile := filePrefix + "_" + ts + "." + settings["captureExt"]
 		capturePath := filepath.Join(settings["captureDir"], captureFile)
 		fh, err := os.Create(capturePath)
 		if err != nil {
@@ -128,12 +135,14 @@ func main() {
 			fmt.Println("Saving to:", capturePath)
 			fmt.Println("Using filter:", filter)
 		}
+
 		// Start stream
 		packetSource := gopacket.NewPacketSource(handle, handle.LinkType())
 
 		// Get timer going for timeout
+		// Create a NewTicker. This sends ticks out on the channel timer.C
 		timer := time.NewTicker(timeout)
-		defer timer.Stop()
+		defer timer.Stop() // not strictly necessary since Go 1.23
 
 		for {
 			select {
@@ -141,7 +150,11 @@ func main() {
 				// If we've received a packet, handle it
 				packethandler.HandlePacket(packet, fh, verbose)
 			case <-timer.C:
-				// If the time has finished, our work is done
+				// If there is nothing on this channel, it means the ticker
+				// has finished, and so we're done.
+				if verbose {
+					fmt.Println("-- done")
+				}
 				return
 			}
 		}

@@ -2,17 +2,18 @@
 
 Simple Go program for logging the connections made by a device on the local network.
 
-It just logs the SRC and DST IPs and packet types. It doesn't attempt to look at the contents of the packets.
+It just logs the SRC and DST IPs and packet types. It doesn't attempt to look at the contents of the packets. If you want clever stuff, use Wireshark, tshark or tcpdump.
 
 Command line options are:
 
-- -a \<ip>   IP address of device to sniff
-- -d \<dev>  Name of a predefined device to sniff
-- -f \<name> Name of a predefined BPF-format filter to use
-- -t \<secs> Timeout in secs - default 30
+- -a \<ip>   IP address of device to sniff. REQUIRED.
+- -d \<dev>  Name of a predefined device to sniff. Optional.
+- -f \<name> Name of a predefined BPF-format filter to use. Optional.
+- -i \<if>   Interface to use for sniffing (default: enp3s0). Optional.
+- -t \<secs> Timeout in secs (default: 30). Optional.
 - -v         Turn on verbose mode (otherwise there's no STDOUT output)
 
-The first three are treated in that priority - ie, if -a is used, then -d and -f are ignored. If -d is used, -f is ignored.
+The first three are treated in that priority - ie, if -a is used, then -d and -f are ignored. If -d is used, -f is ignored. At least one of these options must be used. Sniffle can't guess what you want to do.
 
 After cloning or downloading this code, `cd` into the sniffle directory and run the `setup.sh` script once.
 
@@ -42,9 +43,19 @@ TARGET_BIN=             # name to give binary, default is directory
 
 By default, it comes configured for Linux on amd64. If you're not building for ARM you can ignore ARM_VERSION. You can also ignore TARGET_BIN, in which case the executable will be called `sniffle`.
 
+With all that done, run:
+
 ```sh
 ./build
 ```
+
+## Config files
+
+You need these config files. The program looks for them in the following locations (and in this order of priority): `/etc/`, an `etc/` subdir in the current working directory and the current working directory itself.
+
+- **localhosts.cfg** - a key/value list of devices on the local network, in the format `<name>: <ip>`. It might be useful to have this in `/etc/` on *nix systems.
+- **snarfle.cfg** - a key/value list of basic config settings, in the format `<name>: <value>`.
+- **bpf_filters.cfg** - a key/value list of basic config settings, in the format `<name>: <filter_string>`.
 
 ## Documentation
 
@@ -59,3 +70,5 @@ By default, it comes configured for Linux on amd64. If you're not building for A
 ## Guarantees
 
 There are no guarantees. This is the work of a dilettante amateur coder. Use at your own risk. If your house explodes or the internet catches fire, don't come running to me.
+
+[ENDS]

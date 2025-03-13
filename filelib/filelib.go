@@ -3,11 +3,28 @@ package filelib
 import (
 	"bufio"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
+// Wrapper to ReadKVFile().
+// Looks in specific locations for the designated config file.
+func ReadConfig(filename string) (map[string]string, error) {
+	var err error = nil
+	data := make(map[string]string)
+	paths := []string{"/etc", "etc", "."}
+
+	for _, path := range paths {
+		data, err = ReadKVFile(filepath.Join(path, filename), ":")
+		if err == nil {
+			break
+		}
+	}
+	return data, err
+}
+
 // Read a text file that contains simple key/value pairs (one per line)
-// separated by the string specific in the sep param.
+// separated by the string specified in the sep param.
 // Returns a map of type map[string]string.
 func ReadKVFile(filepath string, sep string) (map[string]string, error) {
 	file, err := os.Open(filepath)
