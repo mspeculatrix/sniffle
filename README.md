@@ -2,6 +2,8 @@
 
 Simple Go program for logging the connections made by a device on the local network.
 
+Intended for (and tested on) macOS and Linux.
+
 It just logs the SRC and DST IPs and packet types. It doesn't attempt to look at the contents of the packets. If you want clever stuff, use Wireshark, tshark or tcpdump.
 
 Command line options are:
@@ -56,6 +58,10 @@ You need these config files. The program looks for them in the following locatio
 - **localhosts.cfg** - a key/value list of devices on the local network, in the format `<name>: <ip>`. It might be useful to have this in `/etc/` on *nix systems.
 - **snarfle.cfg** - a key/value list of basic config settings, in the format `<name>: <value>`.
 - **bpf_filters.cfg** - a key/value list of basic config settings, in the format `<name>: <filter_string>`.
+
+Examples are provided in the etc folder. I recommend editing them then copying them to your /etc folder.
+
+The `localhosts.cfg` file is (or can be) shared with snarfle, so if you already have that installed in `/etc/` you don't need this copy.
 
 ## Documentation
 
